@@ -1,0 +1,65 @@
+production:
+  first_thing:
+    - target: any
+      name: canvas system packages
+      apply_during: build_only
+      sudo: true
+      execute: true
+      inline: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        apt-get update -qq
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          build-essential \
+          git \
+          libicu-dev \
+          libidn11-dev \
+          libxmlsec1-dev \
+          parallel \
+          pbzip2 \
+          postgresql-client \
+          python-is-python3 \
+          python3-lxml \
+          tzdata \
+          unzip
+
+  after_checkout:
+    - target: rails
+      name: canvas cloud66 config
+      run_on: all_servers
+      execute: true
+      inline: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        cp "$STACK_PATH/config/database.yml.cloud66" "$STACK_PATH/config/database.yml"
+        cp "$STACK_PATH/config/redis.yml.cloud66" "$STACK_PATH/config/redis.yml"
+        cp "$STACK_PATH/config/cache_store.yml.cloud66" "$STACK_PATH/config/cache_store.yml"
+        cp "$STACK_PATH/config/security.yml.cloud66" "$STACK_PATH/config/security.yml"
+        cp "$STACK_PATH/config/domain.yml.cloud66" "$STACK_PATH/config/domain.yml"
+        cp "$STACK_PATH/config/file_store.yml.cloud66" "$STACK_PATH/config/file_store.yml"
+
+        if [ -n "${AWS_S3_BUCKET:-}" ]; then
+          cp "$STACK_PATH/config/amazon_s3.yml.cloud66" "$STACK_PATH/config/amazon_s3.yml"
+        fi
+
+        if [ -n "${SMTP_ADDRESS:-}" ]; then
+          cp "$STACK_PATH/config/outgoing_mail.yml.cloud66" "$STACK_PATH/config/outgoing_mail.yml"
+        fi
+
+  after_bundle:
+    - target: rails
+      name: canvas assets
+      run_on: single_server
+      execute: true
+      inline: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        cd "$STACK_PATH"
+        corepack enable
+        corepack prepare yarn@1.19.1 --activate
+        yarn install --frozen-lockfile || yarn install --frozen-lockfile --network-concurrency 1
+        COMPILE_ASSETS_BRAND_CONFIGS=0 COMPILE_ASSETS_NPM_INSTALL=0 bin/rails canvas:compile_assets --trace
+        rm -rf node_modules
