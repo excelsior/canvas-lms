@@ -45,12 +45,22 @@ Required:
 - `ENCRYPTION_KEY`
 - `JWT_ENCRYPTION_KEY`
 - `CANVAS_DOMAIN`
-- `RAILS_ENV=production`
-- `RACK_ENV=production`
-- `NODE_ENV=production`
+- `POSTGRESQL_ADDRESS`
+- `POSTGRESQL_PORT`
+- `POSTGRESQL_DATABASE`
+- `POSTGRESQL_USERNAME`
+- `POSTGRESQL_PASSWORD`
 
 Cloud 66 replaces `AUTO_GENERATE_*` values with generated secrets on deploy.
 Keep those generated values stable after the first production deployment.
+
+## Bundler Lockfiles
+
+Cloud 66 runs Rails deploys with Bundler in deployment/frozen mode. Canvas uses
+`bundler-multilock`, so the active plugin lockfile must be checked in with the
+branch. For this Rails 8.0 deployment, keep `Gemfile.rails80.plugins.lock`
+committed. If this file is missing, Cloud 66 will fail during `bundle install`
+before installing gems.
 
 ## File Storage
 
@@ -81,10 +91,13 @@ Canvas config files are committed as `.cloud66` templates because
 ## Asset Compilation
 
 Cloud 66's standard Rails asset pipeline compilation is disabled in the
-manifest. Canvas assets are compiled with:
+manifest. Canvas CSS and JavaScript assets are compiled with:
 
 ```bash
-bin/rails canvas:compile_assets --trace
+bin/rails canvas:compile_assets_dev --trace
 ```
 
-The hook also prepares Yarn 1.19.1 with Corepack to match Canvas's lockfile.
+The hook also prepares Yarn 1.19.1 with Corepack to match Canvas's lockfile and
+installs JavaScript dev dependencies with `--production=false`, because Canvas's
+asset build uses packages such as `patch-package` and
+`@instructure/i18nliner-canvas`.

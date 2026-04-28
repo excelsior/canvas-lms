@@ -60,6 +60,6 @@ production:
         cd "$STACK_PATH"
         corepack enable
         corepack prepare yarn@1.19.1 --activate
-        yarn install --frozen-lockfile || yarn install --frozen-lockfile --network-concurrency 1
-        COMPILE_ASSETS_BRAND_CONFIGS=0 COMPILE_ASSETS_NPM_INSTALL=0 bin/rails canvas:compile_assets --trace
+        yarn install --frozen-lockfile --production=false || yarn install --frozen-lockfile --production=false --network-concurrency 1
+        COMPILE_ASSETS_NPM_INSTALL=0 bin/rails canvas:compile_assets_dev --trace
         rm -rf node_modules
