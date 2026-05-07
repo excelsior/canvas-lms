@@ -91,13 +91,17 @@ Canvas config files are committed as `.cloud66` templates because
 ## Asset Compilation
 
 Cloud 66's standard Rails asset pipeline compilation is disabled in the
-manifest. Canvas CSS and JavaScript assets are compiled with:
+manifest. Canvas assets are compiled with:
 
 ```bash
-bin/rails canvas:compile_assets_dev --trace
+bin/rails canvas:compile_assets --trace
 ```
 
-The hook also prepares Yarn 1.19.1 with Corepack to match Canvas's lockfile and
-installs JavaScript dev dependencies with `--production=false`, because Canvas's
-asset build uses packages such as `patch-package` and
-`@instructure/i18nliner-canvas`.
+The hook prepares Yarn 1.19.1 with Corepack and installs JavaScript dev
+dependencies with `--production=false`, because Canvas's asset build uses
+packages such as `patch-package` and `@instructure/i18nliner-canvas`.
+
+The hook sets production asset flags so it builds optimized webpack assets,
+skips the development webpack fallback, and avoids styleguide/API docs tasks
+that depend on development/test Ruby gems excluded by Cloud 66's Bundler
+configuration.

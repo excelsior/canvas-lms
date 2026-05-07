@@ -61,5 +61,14 @@ production:
         corepack enable
         corepack prepare yarn@1.19.1 --activate
         yarn install --frozen-lockfile --production=false || yarn install --frozen-lockfile --production=false --network-concurrency 1
-        COMPILE_ASSETS_NPM_INSTALL=0 bin/rails canvas:compile_assets_dev --trace
+        RAILS_ENV=production \
+          USE_OPTIMIZED_JS=true \
+          JS_BUILD_NO_FALLBACK=1 \
+          SKIP_SOURCEMAPS=1 \
+          COMPILE_ASSETS_NPM_INSTALL=0 \
+          COMPILE_ASSETS_STYLEGUIDE=0 \
+          COMPILE_ASSETS_API_DOCS=0 \
+          COMPILE_ASSETS_BRAND_CONFIGS=0 \
+          CANVAS_BUILD_CONCURRENCY="${CANVAS_BUILD_CONCURRENCY:-2}" \
+          bin/rails canvas:compile_assets --trace
         rm -rf node_modules
