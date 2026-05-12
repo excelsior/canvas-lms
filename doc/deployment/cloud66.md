@@ -105,3 +105,10 @@ The hook sets production asset flags so it builds optimized webpack assets,
 skips the development webpack fallback, and avoids styleguide/API docs tasks
 that depend on development/test Ruby gems excluded by Cloud 66's Bundler
 configuration.
+
+Canvas asset compilation is very noisy. The Cloud 66 hook writes detailed Yarn
+and asset output to `shared/log/cloud66-assets-<timestamp>.log` on the Rails
+server and prints compact heartbeat lines to the Cloud 66 deploy log. If the
+asset build fails, the hook prints the last 20000 bytes of that log so the
+failure stays visible even when Cloud 66's full log viewer cannot open the
+complete deploy output.

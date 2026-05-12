@@ -58,10 +58,56 @@ production:
         set -euo pipefail
 
         cd "$STACK_PATH"
-        corepack enable
-        corepack prepare yarn@1.19.1 --activate
-        yarn install --frozen-lockfile --production=false || yarn install --frozen-lockfile --production=false --network-concurrency 1
-        RAILS_ENV=production \
+        export NO_COLOR=1
+        export TERM=dumb
+
+        release_parent="$(dirname "$STACK_PATH")"
+        if [ "$(basename "$release_parent")" = "releases" ]; then
+          shared_root="$(dirname "$release_parent")/shared"
+        else
+          shared_root="$STACK_PATH"
+        fi
+
+        mkdir -p "$shared_root/log"
+        asset_log="$shared_root/log/cloud66-assets-$(date -u +%Y%m%d%H%M%S).log"
+
+        run_with_log() {
+          local name="$1"
+          shift
+          local started
+          local pid
+          local status
+
+          started="$(date +%s)"
+          echo "Starting ${name}; detailed output is in ${asset_log}"
+
+          set +e
+          "$@" >> "$asset_log" 2>&1 &
+          pid="$!"
+
+          while kill -0 "$pid" 2>/dev/null; do
+            sleep 60
+            echo "Still running ${name} after $(( $(date +%s) - started ))s; log size: $(du -h "$asset_log" | awk '{print $1}')"
+          done
+
+          wait "$pid"
+          status="$?"
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            echo "${name} failed with exit code ${status}. Last 20000 bytes from ${asset_log}:"
+            tail -c 20000 "$asset_log" || true
+            exit "$status"
+          fi
+
+          echo "Finished ${name} in $(( $(date +%s) - started ))s"
+        }
+
+        run_with_log "corepack setup" corepack enable
+        run_with_log "yarn activation" corepack prepare yarn@1.19.1 --activate
+        run_with_log "yarn install" bash -lc 'yarn install --frozen-lockfile --production=false || yarn install --frozen-lockfile --production=false --network-concurrency 1'
+        run_with_log "canvas asset compile" env \
+          RAILS_ENV=production \
           USE_OPTIMIZED_JS=true \
           JS_BUILD_NO_FALLBACK=1 \
           SKIP_SOURCEMAPS=1 \
@@ -71,4 +117,5 @@ production:
           COMPILE_ASSETS_BRAND_CONFIGS=0 \
           CANVAS_BUILD_CONCURRENCY="${CANVAS_BUILD_CONCURRENCY:-2}" \
           bin/rails canvas:compile_assets --trace
+
         rm -rf node_modules
