@@ -119,3 +119,80 @@ production:
           bin/rails canvas:compile_assets --trace
 
         rm -rf node_modules
+
+  after_symlink:
+    - target: rails
+      name: canvas database setup
+      run_on: single_server
+      execute: true
+      inline: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        cd "$STACK_PATH"
+        export RAILS_ENV=production
+        export CANVAS_LMS_STATS_COLLECTION="${CANVAS_LMS_STATS_COLLECTION:-opt_out}"
+
+        release_parent="$(dirname "$STACK_PATH")"
+        if [ "$(basename "$release_parent")" = "releases" ]; then
+          shared_root="$(dirname "$release_parent")/shared"
+        else
+          shared_root="$STACK_PATH"
+        fi
+
+        mkdir -p "$shared_root/log"
+        db_log="$shared_root/log/cloud66-db-$(date -u +%Y%m%d%H%M%S).log"
+
+        run_with_log() {
+          local name="$1"
+          shift
+          local started
+          local pid
+          local status
+
+          started="$(date +%s)"
+          echo "Starting ${name}; detailed output is in ${db_log}"
+
+          set +e
+          "$@" >> "$db_log" 2>&1 &
+          pid="$!"
+
+          while kill -0 "$pid" 2>/dev/null; do
+            sleep 60
+            echo "Still running ${name} after $(( $(date +%s) - started ))s; log size: $(du -h "$db_log" | awk '{print $1}')"
+          done
+
+          wait "$pid"
+          status="$?"
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            echo "${name} failed with exit code ${status}. Last 20000 bytes from ${db_log}:"
+            tail -c 20000 "$db_log" || true
+            exit "$status"
+          fi
+
+          echo "Finished ${name} in $(( $(date +%s) - started ))s"
+        }
+
+        canvas_schema_exists="$(
+          PGPASSWORD="$POSTGRESQL_PASSWORD" \
+          psql \
+            -h "$POSTGRESQL_ADDRESS" \
+            -p "${POSTGRESQL_PORT:-5432}" \
+            -U "$POSTGRESQL_USERNAME" \
+            -d "$POSTGRESQL_DATABASE" \
+            -Atqc "select to_regclass('public.settings') is not null"
+        )"
+
+        if [ "$canvas_schema_exists" = "t" ]; then
+          run_with_log "database migrations" bin/rails db:migrate
+        else
+          if [ -z "${CANVAS_LMS_ADMIN_EMAIL:-}" ] || [ -z "${CANVAS_LMS_ADMIN_PASSWORD:-}" ] || [ -z "${CANVAS_LMS_ACCOUNT_NAME:-}" ]; then
+            echo "Fresh Canvas database detected, but initial setup variables are missing."
+            echo "Set CANVAS_LMS_ADMIN_EMAIL, CANVAS_LMS_ADMIN_PASSWORD, and CANVAS_LMS_ACCOUNT_NAME in Cloud 66."
+            exit 1
+          fi
+
+          run_with_log "initial database setup" bin/rails db:initial_setup
+        fi

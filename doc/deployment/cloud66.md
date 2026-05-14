@@ -50,9 +50,15 @@ Required:
 - `POSTGRESQL_DATABASE`
 - `POSTGRESQL_USERNAME`
 - `POSTGRESQL_PASSWORD`
+- `CANVAS_LMS_ADMIN_EMAIL`
+- `CANVAS_LMS_ADMIN_PASSWORD`
+- `CANVAS_LMS_ACCOUNT_NAME`
+- `CANVAS_LMS_STATS_COLLECTION`
 
 Cloud 66 replaces `AUTO_GENERATE_*` values with generated secrets on deploy.
 Keep those generated values stable after the first production deployment.
+Canvas uses the `CANVAS_LMS_*` values during `db:initial_setup` on the first
+deploy against a fresh database.
 
 ## Bundler Lockfiles
 
@@ -95,6 +101,29 @@ small Rails boot check rather than Canvas's built-in `/health_check`, which also
 verifies database connections, DynamicSettings, optional Vault config, and asset
 registry state. Use `/health_check`, `/readiness`, and `/deep` for Canvas runtime
 diagnostics after the stack is deployed.
+
+## Database Setup
+
+Cloud 66 is not running Canvas database setup automatically in this native Rails
+configuration, so `.cloud66/deploy_hooks.yml` handles it after the release
+symlink is created and before Cloud 66 runs the health check.
+
+On a fresh database, the hook runs:
+
+```bash
+bin/rails db:initial_setup
+```
+
+On later deploys, when the Canvas `settings` table already exists, the hook
+runs:
+
+```bash
+bin/rails db:migrate
+```
+
+Detailed output is written to `shared/log/cloud66-db-<timestamp>.log` on the
+Rails server, and failures print the last 20000 bytes into the Cloud 66 deploy
+log.
 
 ## Asset Compilation
 
