@@ -131,7 +131,9 @@ production:
 
         cd "$STACK_PATH"
         export RAILS_ENV=production
-        export CANVAS_LMS_STATS_COLLECTION="${CANVAS_LMS_STATS_COLLECTION:-opt_out}"
+        export CANVAS_LMS_ADMIN_PASSWORD="$(openssl rand -base64 32)"
+        export CANVAS_LMS_ACCOUNT_NAME="Admin"
+        export CANVAS_LMS_STATS_COLLECTION="opt_out"
 
         release_parent="$(dirname "$STACK_PATH")"
         if [ "$(basename "$release_parent")" = "releases" ]; then
@@ -188,9 +190,9 @@ production:
         if [ "$canvas_schema_exists" = "t" ]; then
           run_with_log "database migrations" bin/rails db:migrate
         else
-          if [ -z "${CANVAS_LMS_ADMIN_EMAIL:-}" ] || [ -z "${CANVAS_LMS_ADMIN_PASSWORD:-}" ] || [ -z "${CANVAS_LMS_ACCOUNT_NAME:-}" ]; then
+          if [ -z "${CANVAS_LMS_ADMIN_EMAIL:-}" ]; then
             echo "Fresh Canvas database detected, but initial setup variables are missing."
-            echo "Set CANVAS_LMS_ADMIN_EMAIL, CANVAS_LMS_ADMIN_PASSWORD, and CANVAS_LMS_ACCOUNT_NAME in Cloud 66."
+            echo "Set CANVAS_LMS_ADMIN_EMAIL in Cloud 66."
             exit 1
           fi
 

@@ -51,14 +51,13 @@ Required:
 - `POSTGRESQL_USERNAME`
 - `POSTGRESQL_PASSWORD`
 - `CANVAS_LMS_ADMIN_EMAIL`
-- `CANVAS_LMS_ADMIN_PASSWORD`
-- `CANVAS_LMS_ACCOUNT_NAME`
-- `CANVAS_LMS_STATS_COLLECTION`
 
 Cloud 66 replaces `AUTO_GENERATE_*` values with generated secrets on deploy.
 Keep those generated values stable after the first production deployment.
-Canvas uses the `CANVAS_LMS_*` values during `db:initial_setup` on the first
-deploy against a fresh database.
+Canvas uses `CANVAS_LMS_ADMIN_EMAIL` during `db:initial_setup` on the first
+deploy against a fresh database. The hook generates a random initial admin
+password, names the default account `Admin`, and opts out of usage statistics
+collection.
 
 ## Bundler Lockfiles
 
