@@ -45,7 +45,6 @@ Required:
 - `ENCRYPTION_KEY`
 - `JWT_ENCRYPTION_KEY`
 - `CANVAS_DOMAIN`
-- `POSTGRESQL_ADDRESS`
 - `POSTGRESQL_PORT`
 - `POSTGRESQL_DATABASE`
 - `POSTGRESQL_USERNAME`
@@ -58,6 +57,7 @@ Canvas uses `CANVAS_LMS_ADMIN_EMAIL` during `db:initial_setup` on the first
 deploy against a fresh database. The hook generates a random initial admin
 password, names the default account `Admin`, and opts out of usage statistics
 collection.
+`POSTGRESQL_ADDRESS` defaults to `localhost` when unset.
 
 ## Bundler Lockfiles
 

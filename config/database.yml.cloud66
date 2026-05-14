@@ -1,7 +1,7 @@
 production:
   adapter: postgresql
   encoding: utf8
-  host: <%= ENV.fetch("POSTGRESQL_ADDRESS") %>
+  host: <%= ENV.fetch("POSTGRESQL_ADDRESS", "localhost") %>
   port: <%= ENV.fetch("POSTGRESQL_PORT", 5432) %>
   database: <%= ENV.fetch("POSTGRESQL_DATABASE") %>
   username: <%= ENV.fetch("POSTGRESQL_USERNAME") %>

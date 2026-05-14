@@ -180,7 +180,7 @@ production:
         canvas_schema_exists="$(
           PGPASSWORD="$POSTGRESQL_PASSWORD" \
           psql \
-            -h "$POSTGRESQL_ADDRESS" \
+            -h "${POSTGRESQL_ADDRESS:-localhost}" \
             -p "${POSTGRESQL_PORT:-5432}" \
             -U "$POSTGRESQL_USERNAME" \
             -d "$POSTGRESQL_DATABASE" \
