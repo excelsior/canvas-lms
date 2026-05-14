@@ -93,14 +93,6 @@ Canvas config files are committed as `.cloud66` templates because
 - `config/amazon_s3.yml` when S3 is configured
 - `config/outgoing_mail.yml` when SMTP is configured
 
-## Health Check
-
-Cloud 66 checks `/cloud66_health_check` during deploys. This is intentionally a
-small Rails boot check rather than Canvas's built-in `/health_check`, which also
-verifies database connections, DynamicSettings, optional Vault config, and asset
-registry state. Use `/health_check`, `/readiness`, and `/deep` for Canvas runtime
-diagnostics after the stack is deployed.
-
 ## Database Setup
 
 Cloud 66 is not running Canvas database setup automatically in this native Rails

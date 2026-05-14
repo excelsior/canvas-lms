@@ -1117,7 +1117,6 @@ CanvasRails::Application.routes.draw do
 
   resources :errors, only: %i[show index create], path: :error_reports
 
-  get "cloud66_health_check" => "cloud66_health_check#show"
   get "health_check" => "info#health_check"
   get "health_prognosis" => "info#health_prognosis"
   # To be used for uptime reporting

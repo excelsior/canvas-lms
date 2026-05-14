@@ -11,7 +11,7 @@ production:
           without: ["development", "test"]
       health_check:
         protocol: "https"
-        endpoint: "/cloud66_health_check"
+        endpoint: "/health_check"
         accept: ["200"]
         follow_redirects: true
         timeout: 30
