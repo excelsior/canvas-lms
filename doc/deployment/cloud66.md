@@ -90,6 +90,7 @@ Canvas config files are committed as `.cloud66` templates because
 - `config/security.yml`
 - `config/domain.yml`
 - `config/file_store.yml`
+- `config/delayed_jobs.yml`
 - `config/amazon_s3.yml` when S3 is configured
 - `config/outgoing_mail.yml` when SMTP is configured
 

@@ -39,6 +39,7 @@ production:
         cp "$STACK_PATH/config/security.yml.cloud66" "$STACK_PATH/config/security.yml"
         cp "$STACK_PATH/config/domain.yml.cloud66" "$STACK_PATH/config/domain.yml"
         cp "$STACK_PATH/config/file_store.yml.cloud66" "$STACK_PATH/config/file_store.yml"
+        cp "$STACK_PATH/config/delayed_jobs.yml.cloud66" "$STACK_PATH/config/delayed_jobs.yml"
 
         if [ -n "${AWS_S3_BUCKET:-}" ]; then
           cp "$STACK_PATH/config/amazon_s3.yml.cloud66" "$STACK_PATH/config/amazon_s3.yml"
